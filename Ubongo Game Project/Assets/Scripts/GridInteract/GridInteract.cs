@@ -8,20 +8,21 @@ using UnityEngine.EventSystems;
 public class GridInteract : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     InventoryController inventoryController;
-    ItemGrid itemGrid;
-
+    ItemGrid ItemGrid;
     private void Awake()
     {
-        inventoryController = FindObjectOfType<InventoryController>();
-        itemGrid = GetComponent<ItemGrid>();
+        inventoryController = FindObjectOfType(typeof(InventoryController)) as InventoryController;
+        ItemGrid = GetComponent<ItemGrid>();
     }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
-        inventoryController.selectedItemGrid = itemGrid;
+        inventoryController.selectedItemGrid = ItemGrid;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         inventoryController.selectedItemGrid = null;
     }
+
 }

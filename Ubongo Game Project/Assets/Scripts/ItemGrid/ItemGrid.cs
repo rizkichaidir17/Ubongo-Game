@@ -5,58 +5,107 @@ using UnityEngine;
 
 public class ItemGrid : MonoBehaviour
 {
+    public const float tileSizeWidht = 128;
+    public const float tileSizeHeight = 128;
+    [SerializeField] int gridSizeWidht;
+    [SerializeField] int gridSizeHeight;
 
-    const float _tileSizeWidth = 160;
-    const float _tileSizeHeight = 160;
 
+    RectTransform rect;
     InventoryItem[,] inventoryItemSlot;
-    [SerializeField]int sizeInventoryWidth;
-    [SerializeField]int sizeInventoryHeight;
 
-    [SerializeField] GameObject inventoryItemPrefab;
-
-    RectTransform _rectTransform;
-    // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        _rectTransform = GetComponent<RectTransform>();
-        Init(sizeInventoryWidth, sizeInventoryHeight);
+        rect = GetComponent<RectTransform>();
+        Init(gridSizeWidht, gridSizeHeight);
 
-        InventoryItem inventoryItem = Instantiate(inventoryItemPrefab).GetComponent<InventoryItem>();
-        PlaceItem(inventoryItem, 1, 1);
     }
 
-    private void Init(int width, int height)
+    public InventoryItem PickUpItem(int x, int y)
     {
-        inventoryItemSlot = new InventoryItem[width, height];
-        Vector2 size = new Vector2(width * _tileSizeWidth, height * _tileSizeHeight);
-        _rectTransform.sizeDelta = size;
+        InventoryItem toReturn = inventoryItemSlot[x, y];
+        
+        if(toReturn == null){ return null; }
+
+        for (int ix = 0; ix < toReturn.itemData.widht; ix++)
+        {
+            for (int iy = 0; iy < toReturn.itemData.height; iy++)
+            {
+                inventoryItemSlot[toReturn.onGridPositionX + ix, toReturn.onGridPositionY + iy] = null;
+            }
+        }
+        return toReturn;
+    }
+
+    private void Init(int widht, int height)
+    {
+        inventoryItemSlot = new InventoryItem[widht, height];
+        Vector2 size = new Vector2(widht * tileSizeWidht, height * tileSizeHeight);
+        rect.sizeDelta = size;
     }
 
     Vector2 positionOnTheGrid = new Vector2();
     Vector2Int tileGridPosition = new Vector2Int();
-
-   public Vector2Int GetTileGridPosition(Vector2 mousePositon)
-   {
-        positionOnTheGrid.x = mousePositon.x - _rectTransform.position.x;
-        positionOnTheGrid.y = _rectTransform.position.y - mousePositon.y;
-
-        tileGridPosition.x = (int)(positionOnTheGrid.x / _tileSizeWidth);
-        tileGridPosition.y = (int)(positionOnTheGrid.y / _tileSizeHeight);
-
-        return tileGridPosition;
-   }
-
-   public void PlaceItem(InventoryItem inventoryItem, int posX, int posY)
+    public Vector2Int GetTileGridPosition(Vector2 mousePosition)
     {
-        RectTransform rectTransform = inventoryItem.GetComponent<RectTransform>();
-        rectTransform.SetParent(this._rectTransform);
-        inventoryItemSlot[posX, posY] = inventoryItem;
+        positionOnTheGrid.x = mousePosition.x - rect.position.x;
+        positionOnTheGrid.y = rect.position.y - mousePosition.y;
+
+        tileGridPosition.x = (int)(positionOnTheGrid.x / tileSizeWidht);
+        tileGridPosition.y = (int)(positionOnTheGrid.y / tileSizeHeight);
+        return tileGridPosition;
+    }
+
+    public bool PlaceItem(InventoryItem inventoryItem, int posX, int posY)
+    {
+        if (BoundryCheck(posX, posY, inventoryItem.itemData.widht, inventoryItem.itemData.height) == false) return false;
+
+        RectTransform rectItem = inventoryItem.GetComponent<RectTransform>();
+        rectItem.SetParent(this.rect);
+
+        for (int x = 0; x < inventoryItem.itemData.widht; x++)
+        {
+            for (int y = 0; y < inventoryItem.itemData.height; y++)
+            {
+                inventoryItemSlot[posX + x, posY + y] = inventoryItem;
+            }
+        }
+
+        inventoryItem.onGridPositionX = posX;
+        inventoryItem.onGridPositionY = posY;
 
         Vector2 position = new Vector2();
-        position.x = posX * sizeInventoryWidth + sizeInventoryWidth / 2;
-        position.y = posY * sizeInventoryHeight + sizeInventoryHeight / 2;
+        position.x = posX * tileSizeWidht + tileSizeWidht * inventoryItem.itemData.widht / 2;
+        position.y = -(posY * tileSizeHeight + tileSizeHeight * inventoryItem.itemData.height / 2);
 
-        rectTransform.localPosition = position;
-    } 
+        rectItem.localPosition = position;
+          
+        return true;
+    }
+
+    bool PositionCheck(int posX, int posY)
+    {
+        if(posX < 0 || posY < 0)
+        {
+            return false;
+        }
+
+        if(posX >= gridSizeWidht || posY >= gridSizeHeight)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool BoundryCheck(int  posX, int posY, int width, int height)
+    {
+        if(PositionCheck(posX, posY) == false) { return false; }
+
+        posX += width-1;
+        posY += height-1;
+
+        if(PositionCheck(posX, posY) == false) { return false; }
+        return true;
+    }
 }
