@@ -15,3 +15,4 @@ MonoBehaviour:
   widht: 1
   height: 1
   itemIcon: {fileID: 21300000, guid: 34b5a093c89e7584aa1fe6e40aeeb77a, type: 3}
+  tetrominoes: 0
